@@ -1,0 +1,37 @@
+## https://www.biostars.org/p/311199/
+## https://al2na.github.io/compgenr/genomic_intervals/granges.html
+
+```{r}
+library(BiocManager)
+library(GenomicRanges)
+```
+
+```{r}
+# Read the first text file
+cpgi.df <- read.table("../data/Train_call.txt", sep = "\t", header = TRUE, stringsAsFactors = FALSE)
+
+# Read the second text file
+gene_map.df <- read.table("../data/BasepairToGeneMap.tsv", sep = "\t", header = TRUE, stringsAsFactors = FALSE)
+
+# Replace 'X' and 'Y' values in the 'Chromosome' column with '23'
+gene_map.df$Chromosome <- gsub("X", "23", gene_map.df$Chromosome)
+gene_map.df$Chromosome <- gsub("Y", "23", gene_map.df$Chromosome)
+
+cpgi.gr = GRanges(seqnames=cpgi.df$Chromosome, ranges=IRanges(start=as.numeric(cpgi.df[["Start"]]),
+                              end=as.numeric(cpgi.df[["End"]])))
+gene_map.gr = GRanges(seqnames=gene_map.df$Chromosome, ranges=IRanges(start=as.numeric(gene_map.df[["Gene_start"]]),
+                              end=as.numeric(gene_map.df[["Gene_end"]])))
+#overlaps <- matrix(0, nrow(gene_map.df), length(cpgi.df))
+
+# Count overlaps between cpgi and gene ranges
+#overlaps <- findOverlaps(cpgi.gr, gene_map.gr)
+
+#cpgi.df$Gene_ID <- gene_map.df$ENSEMBL_gene_id[subjectHits(overlaps)]
+#cpgi.df$Gene_Symbol <- gene_map.df$HGNC_symbol[subjectHits(overlaps)]
+```
+```{r}
+hits <- findOverlaps(gene_map.gr, cpgi.gr, type="within")
+df_ann <- cbind(cpgi.df[subjectHits(hits),],gene_map.df[queryHits(hits),])
+head(df_ann)
+write.csv(df_ann, file = '../data/mapped_training_call.csv')
+```

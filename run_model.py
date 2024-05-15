@@ -19,7 +19,8 @@ import argparse
 import sys
 # Start your coding
 
-# import the library you need here
+import pickle
+import pandas as pd
 
 # End your coding
 
@@ -50,10 +51,37 @@ def main():
 
     # Start your coding
 
-    # suggested steps
-    # Step 1: load the model from the model file
-    # Step 2: apply the model to the input file to do the prediction
-    # Step 3: write the prediction into the desinated output file
+    # Step 1: Load the trained model from the pickle file
+    with open(args.model_file, 'rb') as file:
+        trained_model = pickle.load(file)
+        print("Model loaded successfully.")
+
+    # Step 2: Apply the model to the input file to do the prediction
+    # Assume input data is stored in a CSV file
+    input_data = pd.read_csv(args.input_file)
+
+    # Select features
+    selected_features = [1902, 1956, 1973, 2026, 2058, 2183, 2184, 2207, 2211, 2213, 2547, 2593, 1672, 118, 192, 695, 772, 791, 854, 1061, 1091, 1559, 1643, 1656, 1678, 1900, 2017, 2021, 2024, 2210, 2218, 2750, 2776, 2791, 2817, 2825]
+    X_new_selected_features = input_data.iloc[:, selected_features]
+
+    X = X_new_selected_features.to_numpy()
+
+    # Perform the prediction
+    predictions = trained_model.predict(X)
+
+    # Map predictions to category labels
+    category_labels = ['HER2+', 'HR+', 'Triple Neg']
+    predictions_labels = [category_labels[pred] for pred in predictions]
+
+    # Prepare output DataFrame
+    output_data = pd.DataFrame({
+        'Sample': input_data.iloc[:, 0],  # Assuming the first column contains sample labels
+        'Subgroup': predictions_labels
+    })
+
+    # Step 3: Write the predictions into the designated output file
+    output_data.to_csv(args.output_file, sep='\t', index=False, quoting=1)
+    print(f"Predictions written to {args.output_file}")
 
     # End your coding
 
